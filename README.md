@@ -36,6 +36,16 @@ A clean and responsive **Contact Manager** web app built with **HTML**, **Tailwi
 
 ---
 
+##🔧 Future Improvements (Ideas)
+- 💾 Add localStorage to persist data
+- 🖼️ Support profile pictures
+- 🎂 Include birthday, address, tags, notes
+- 🌙 Dark mode toggle
+- 📤 Export/Import contacts as JSON/CSV
+- 📱 Mobile-first layout and animations
+
+---
+
 ## 📂 Project Structure
 
 ```plaintext
