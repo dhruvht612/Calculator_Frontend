@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .contact-card:hover .contact-actions {
+            opacity: 1;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-700">
+                <i class="fas fa-address-book mr-2"></i> Contact Manager
+            </h1>
+            <button id="addContactBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                <i class="fas fa-plus mr-2"></i> Add Contact
+            </button>
+        </header>
+        
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative flex-grow">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search contacts..." class="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <select id="filterSelect" class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="all">All Contacts</option>
+                    <option value="favorite">Favorites</option>
+                    <option value="family">Family</option>
+                    <option value="work">Work</option>
+                    <option value="friend">Friends</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Contacts Grid -->
+        <div id="contactsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Contacts will be loaded here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <i class="fas fa-user-slash text-5xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600">No contacts found</h3>
+            <p class="text-gray-500 mb-4">Add your first contact by clicking the button above</p>
+            <button id="addFirstContactBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-plus mr-2"></i> Add Contact
+            </button>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md slide-in">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold" id="modalTitle">Add New Contact</h3>
+                        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="contactForm" class="space-y-4">
+                        <input type="hidden" id="contactId">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" id="name" required class="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                            <input type="tel" id="phone" required class="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" class="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                            <select id="category" class="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="general">General</option>
+                                <option value="family">Family</option>
+                                <option value="work">Work</option>
+                                <option value="friend">Friend</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="favorite" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="favorite" class="ml-2 block text-sm text-gray-700">Favorite</label>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" id="cancelBtn" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md slide-in">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold">Confirm Deletion</h3>
+                        <button id="closeConfirmModalBtn" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="mb-6">Are you sure you want to delete this contact? This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelDeleteBtn" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="button" id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample initial contacts
+        let contacts = [
+            { id: 1, name: 'John Doe', phone: '555-123-4567', email: 'john@example.com', category: 'work', favorite: true },
+            { id: 2, name: 'Jane Smith', phone: '555-987-6543', email: 'jane@example.com', category: 'family', favorite: false },
+            { id: 3, name: 'Mike Johnson', phone: '555-456-7890', email: 'mike@example.com', category: 'friend', favorite: true },
+            { id: 4, name: 'Sarah Williams', phone: '555-789-0123', email: 'sarah@example.com', category: 'work', favorite: false }
+        ];
+        
+        // DOM Elements
+        const contactsContainer = document.getElementById('contactsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const addContactBtn = document.getElementById('addContactBtn');
+        const addFirstContactBtn = document.getElementById('addFirstContactBtn');
+        const contactModal = document.getElementById('contactModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const contactForm = document.getElementById('contactForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const contactIdInput = document.getElementById('contactId');
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        const emailInput = document.getElementById('email');
+        const categorySelect = document.getElementById('category');
+        const favoriteCheckbox = document.getElementById('favorite');
+        
+        // Modal buttons
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const closeConfirmModalBtn = document.getElementById('closeConfirmModalBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        
+        // Current contact to delete
+        let contactToDelete = null;
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderContacts();
+            
+            // Event listeners
+            addContactBtn.addEventListener('click', openAddContactModal);
+            addFirstContactBtn.addEventListener('click', openAddContactModal);
+            searchInput.addEventListener('input', renderContacts);
+            filterSelect.addEventListener('change', renderContacts);
+            
+            // Modal events
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            contactForm.addEventListener('submit', handleFormSubmit);
+            
+            // Confirmation modal events
+            closeConfirmModalBtn.addEventListener('click', closeConfirmModal);
+            cancelDeleteBtn.addEventListener('click', closeConfirmModal);
+            confirmDeleteBtn.addEventListener('click', deleteContact);
+        });
+        
+        // Render contacts based on search and filter
+        function renderContacts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filterValue = filterSelect.value;
+            
+            let filteredContacts = contacts.filter(contact => {
+                const matchesSearch = contact.name.toLowerCase().includes(searchTerm) || 
+                                     contact.phone.includes(searchTerm) || 
+                                     (contact.email && contact.email.toLowerCase().includes(searchTerm));
+                
+                const matchesFilter = filterValue === 'all' || 
+                                     (filterValue === 'favorite' && contact.favorite) || 
+                                     contact.category === filterValue;
+                
+                return matchesSearch && matchesFilter;
+            });
+            
+            contactsContainer.innerHTML = '';
+            
+            if (filteredContacts.length === 0) {
+                emptyState.classList.remove('hidden');
+                contactsContainer.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                contactsContainer.classList.remove('hidden');
+                
+                filteredContacts.forEach(contact => {
+                    const contactCard = createContactCard(contact);
+                    contactsContainer.appendChild(contactCard);
+                });
+            }
+        }
+        
+        // Create a contact card element
+        function createContactCard(contact) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow overflow-hidden fade-in contact-card';
+            
+            // Category colors
+            const categoryColors = {
+                family: 'bg-blue-100 text-blue-800',
+                work: 'bg-purple-100 text-purple-800',
+                friend: 'bg-green-100 text-green-800',
+                general: 'bg-gray-100 text-gray-800'
+            };
+            
+            const categoryClass = categoryColors[contact.category] || categoryColors.general;
+            
+            card.innerHTML = `
+                <div class="p-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg truncate">${contact.name}</h3>
+                            <span class="text-xs px-2 py-1 rounded-full ${categoryClass}">${contact.category}</span>
+                        </div>
+                        <button class="favorite-btn text-${contact.favorite ? 'yellow-500' : 'gray-300'} hover:text-yellow-500" data-id="${contact.id}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 space-y-2">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-phone mr-2 text-sm w-4"></i>
+                            <span>${contact.phone}</span>
+                        </div>
+                        ${contact.email ? `
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-envelope mr-2 text-sm w-4"></i>
+                            <span class="truncate">${contact.email}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="mt-4 flex justify-end space-x-2 contact-actions opacity-0 transition-opacity duration-200">
+                        <button class="edit-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200" data-id="${contact.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200" data-id="${contact.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners to buttons
+            const favoriteBtn = card.querySelector('.favorite-btn');
+            const editBtn = card.querySelector('.edit-btn');
+            const deleteBtn = card.querySelector('.delete-btn');
+            
+            favoriteBtn.addEventListener('click', () => toggleFavorite(contact.id));
+            editBtn.addEventListener('click', () => openEditContactModal(contact.id));
+            deleteBtn.addEventListener('click', () => openDeleteConfirmation(contact.id));
+            
+            return card;
+        }
+        
+        // Toggle favorite status
+        function toggleFavorite(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (contact) {
+                contact.favorite = !contact.favorite;
+                renderContacts();
+            }
+        }
+        
+        // Open modal for adding a new contact
+        function openAddContactModal() {
+            modalTitle.textContent = 'Add New Contact';
+            contactForm.reset();
+            contactIdInput.value = '';
+            openModal();
+        }
+        
+        // Open modal for editing a contact
+        function openEditContactModal(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (contact) {
+                modalTitle.textContent = 'Edit Contact';
+                contactIdInput.value = contact.id;
+                nameInput.value = contact.name;
+                phoneInput.value = contact.phone;
+                emailInput.value = contact.email || '';
+                categorySelect.value = contact.category;
+                favoriteCheckbox.checked = contact.favorite;
+                openModal();
+            }
+        }
+        
+        // Handle form submission (add/edit)
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const id = contactIdInput.value ? parseInt(contactIdInput.value) : Date.now();
+            const contactData = {
+                id,
+                name: nameInput.value,
+                phone: phoneInput.value,
+                email: emailInput.value || null,
+                category: categorySelect.value,
+                favorite: favoriteCheckbox.checked
+            };
+            
+            if (contactIdInput.value) {
+                // Update existing contact
+                const index = contacts.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    contacts[index] = contactData;
+                }
+            } else {
+                // Add new contact
+                contacts.unshift(contactData);
+            }
+            
+            closeModal();
+            renderContacts();
+        }
+        
+        // Open delete confirmation modal
+        function openDeleteConfirmation(id) {
+            contactToDelete = id;
+            confirmModal.classList.remove('hidden');
+        }
+        
+        // Delete contact after confirmation
+        function deleteContact() {
+            contacts = contacts.filter(c => c.id !== contactToDelete);
+            closeConfirmModal();
+            renderContacts();
+        }
+        
+        // Open modal
+        function openModal() {
+            contactModal.classList.remove('hidden');
+        }
+        
+        // Close modal
+        function closeModal() {
+            contactModal.classList.add('hidden');
+        }
+        
+        // Close confirmation modal
+        function closeConfirmModal() {
+            confirmModal.classList.add('hidden');
+            contactToDelete = null;
+        }
+    </script>
+</body>
+</html>
