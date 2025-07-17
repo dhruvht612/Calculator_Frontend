@@ -48,9 +48,22 @@ A clean and responsive **Contact Manager** web app built with **HTML**, **Tailwi
 
 ---
 
+## 🤝 Contributing
+Pull requests are welcome! Feel free to fork the repo and improve the project.
+
+--- 
+
+## 👨‍💻 Author
+Dhruv Thakar
+Built as a personal project to explore frontend interactivity and UI/UX with Tailwind CSS.
+
+---
+
 ## 📂 Project Structure
 
 ```plaintext
 ├── index.html       # Main HTML file
 ├── script.js        # Core JavaScript functionality
-├── style.css        # Optional: custom styles (if separated)
+├── style.css        # Custom styles 
+
+
