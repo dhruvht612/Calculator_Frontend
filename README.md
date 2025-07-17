@@ -36,7 +36,9 @@ A clean and responsive **Contact Manager** web app built with **HTML**, **Tailwi
 
 ---
 
-##🔧 Future Improvements (Ideas)
+##  🔧 Future Improvements (Ideas)
+
+
 - 💾 Add localStorage to persist data
 - 🖼️ Support profile pictures
 - 🎂 Include birthday, address, tags, notes
